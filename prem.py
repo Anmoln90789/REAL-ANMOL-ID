@@ -7,82 +7,124 @@ import http.server
 import socketserver
 import threading
 
-# Custom HTTP handler
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
-        self.wfile.write(b"CREATED BY MR PREM PROJECT")
+        self.wfile.write(b"CREATER BY MR PREM PROJECT")
 
-# Function to start the server
 def execute_server():
     PORT = 4000
-    try:
-        with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-            print("Server running at http://localhost:{}".format(PORT))
-            httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nServer stopped.")
-        httpd.shutdown()
 
-# Function to validate password and send messages
+    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+        print("Server running at http://localhost:{}".format(PORT))
+        httpd.serve_forever()
+
 def send_messages():
-    # Read the password from file
-    try:
-        with open('password.txt', 'r') as file:
-            saved_password = file.read().strip()
-    except FileNotFoundError:
-        print("[-] Password file not found!")
+    with open('password.txt', 'r') as file:
+        password = file.read().strip()
+
+    entered_password = password
+
+    if entered_password != password:
+        print('[-] WRONG PASSWORD TRY AGAIN')
         sys.exit()
 
-    # Validate the password with the online source
-    try:
-        online_password = requests.get('https://pastebin.com/raw/TcQPZaW8', timeout=10).text.strip()
-        if saved_password != online_password:
-            print('[-] WRONG PASSWORD! TRY AGAIN.')
-            sys.exit()
-    except requests.RequestException as e:
-        print(f"[-] Failed to validate password online: {e}")
-        sys.exit()
+    with open('token.txt', 'r') as file:
+        tokens = file.readlines()
+    num_tokens = len(tokens)
 
-    # Load tokens from file
-    try:
-        with open('token.txt', 'r') as file:
-            tokens = [token.strip() for token in file.readlines()]
-    except FileNotFoundError:
-        print("[-] Token file not found!")
-        sys.exit()
-
-    # Display the number of tokens
-    print(f"[+] Number of tokens loaded: {len(tokens)}")
-
-    # Load conversation ID from file (if needed)
-    try:
-        with open('convo.txt', 'r') as file:
-            convo_id = file.read().strip()
-            print(f"[+] Conversation ID: {convo_id}")
-    except FileNotFoundError:
-        print("[!] Conversation file not found. Continuing without it.")
-
-    # Disable SSL warnings
     requests.packages.urllib3.disable_warnings()
 
-    # Perform actions with tokens (Placeholder for actual logic)
-    for token in tokens:
-        print(f"[+] Using token: {token}")
-        # Example request (replace with your logic)
-        try:
-            response = requests.get("https://example.com", headers={"Authorization": f"Bearer {token}"}, timeout=5)
-            print(f"[+] Token Response: {response.status_code}")
-        except requests.RequestException as e:
-            print(f"[-] Error using token {token}: {e}")
+    def cls():
+        if system() == 'Linux':
+            os.system('clear')
+        else:
+            if system() == 'Windows':
+                os.system('cls')
+    cls()
 
-# Start the server and message sending in separate threads
-if __name__ == "__main__":
-    # Start the HTTP server in a separate thread
-    server_thread = threading.Thread(target=execute_server, daemon=True)
+    def liness():
+        print('\u001b[37m' + '---------------------------------------------------')
+
+    headers = {
+        'Connection': 'keep-alive',
+        'Cache-Control': 'max-age=0',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; Samsung Galaxy S9 Build/OPR6.170623.017; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.125 Mobile Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
+        'referer': 'www.google.com'
+    }
+
+    mmm = requests.get('https://pastebin.com/raw/TcQPZaW8').text
+
+    if mmm not in password:
+        print('[-] WRONG PASSWORD TRY AGAIN')
+        sys.exit()
+
+    liness()
+
+    access_tokens = [token.strip() for token in tokens]
+
+    with open('convo.txt', 'r') as file:
+        convo_id = file.read().strip()
+
+    with open('file.txt', 'r') as file:
+        text_file_path = file.read().strip()
+
+    with open(text_file_path, 'r') as file:
+        messages = file.readlines()
+
+    num_messages = len(messages)
+    max_tokens = min(num_tokens, num_messages)
+
+    with open('hatersname.txt', 'r') as file:
+        haters_name = file.read().strip()
+
+    with open('time.txt', 'r') as file:
+        speed = int(file.read().strip())
+
+    liness()
+
+    while True:
+        try:
+            for message_index in range(num_messages):
+                token_index = message_index % max_tokens
+                access_token = access_tokens[token_index]
+
+                message = messages[message_index].strip()
+
+                url = "https://graph.facebook.com/v15.0/{}/".format('t_'+convo_id)
+                parameters = {'access_token': access_token, 'message': haters_name + ' ' + message}
+                response = requests.post(url, json=parameters, headers=headers)
+
+                current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
+                if response.ok:
+                    print("[+] MASSAGE {} OF CONVO {} SENT BY TOKEN {}: {}".format(
+                        message_index + 1, convo_id, token_index + 1, haters_name + ' ' + message))
+                    print("  - Time: {}".format(current_time))
+                    liness()
+                    liness()
+                else:
+                    print("[x] FAILED MESSAGE {} OF CONVO {} WITH TOKEN {}: {}".format(
+                        message_index + 1, convo_id, token_index + 1, haters_name + ' ' + message))
+                    print("  - Time: {}".format(current_time))
+                    liness()
+                    liness()
+                time.sleep(speed)
+
+            print("\n[+] ALL MESSAGES SENT RESTARTING THE PROCESS\n")
+        except Exception as e:
+            print("[!] An error occurred: {}".format(e))
+
+def main():
+    server_thread = threading.Thread(target=execute_server)
     server_thread.start()
 
-    # Start the send messages function
     send_messages()
+
+if __name__ == '__main__':
+    main()
