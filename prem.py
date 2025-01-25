@@ -1,129 +1,121 @@
 import requests
 import time
 import sys
-from platform import system
 import os
+import threading
+from platform import system
 import http.server
 import socketserver
-import threading
 
+# Custom HTTP Handler
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
-        self.wfile.write(b"CREATER BY MR PREM PROJECT")
+        self.wfile.write(b"CREATED BY MR PREM PROJECT")
 
+# Start HTTP Server
 def execute_server():
     PORT = 4000
-
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-        print("Server running at http://localhost:{}".format(PORT))
+        print(f"Server running at http://localhost:{PORT}")
         httpd.serve_forever()
 
+# Clear terminal screen
+def clear_screen():
+    os.system('cls' if system() == 'Windows' else 'clear')
+
+# Print separator line
+def print_separator():
+    print('-' * 50)
+
+# Send Messages Logic
 def send_messages():
-    with open('password.txt', 'r') as file:
-        password = file.read().strip()
+    try:
+        # Load passwords
+        with open('password.txt', 'r') as file:
+            correct_password = file.read().strip()
 
-    entered_password = password
+        # Password verification
+        entered_password = input("Enter the password: ").strip()
+        if entered_password != correct_password:
+            print('[-] WRONG PASSWORD. TRY AGAIN.')
+            sys.exit()
 
-    if entered_password != password:
-        print('[-] WRONG PASSWORD TRY AGAIN')
-        sys.exit()
+        # Load tokens
+        with open('token.txt', 'r') as file:
+            tokens = [token.strip() for token in file.readlines()]
+        if not tokens:
+            print("[-] No tokens found in 'token.txt'.")
+            sys.exit()
 
-    with open('token.txt', 'r') as file:
-        tokens = file.readlines()
-    num_tokens = len(tokens)
+        # Load conversation ID
+        with open('convo.txt', 'r') as file:
+            convo_id = file.read().strip()
 
-    requests.packages.urllib3.disable_warnings()
+        # Load messages
+        with open('file.txt', 'r') as file:
+            text_file_path = file.read().strip()
+        with open(text_file_path, 'r') as file:
+            messages = [msg.strip() for msg in file.readlines()]
 
-    def cls():
-        if system() == 'Linux':
-            os.system('clear')
-        else:
-            if system() == 'Windows':
-                os.system('cls')
-    cls()
+        # Load hater's name
+        with open('hatersname.txt', 'r') as file:
+            haters_name = file.read().strip()
 
-    def liness():
-        print('\u001b[37m' + '---------------------------------------------------')
+        # Load speed
+        with open('time.txt', 'r') as file:
+            speed = int(file.read().strip())
 
-    headers = {
-        'Connection': 'keep-alive',
-        'Cache-Control': 'max-age=0',
-        'Upgrade-Insecure-Requests': '1',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; Samsung Galaxy S9 Build/OPR6.170623.017; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.125 Mobile Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Encoding': 'gzip, deflate',
-        'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
-        'referer': 'www.google.com'
-    }
+        # HTTP Headers
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0)',
+            'Accept': '*/*'
+        }
 
-    mmm = requests.get('https://pastebin.com/raw/TcQPZaW8').text
+        # Sending messages
+        clear_screen()
+        print_separator()
+        print("[+] STARTING MESSAGE SENDING PROCESS")
+        print_separator()
 
-    if mmm not in password:
-        print('[-] WRONG PASSWORD TRY AGAIN')
-        sys.exit()
+        for index, message in enumerate(messages):
+            token = tokens[index % len(tokens)]  # Rotate tokens
+            url = f"https://graph.facebook.com/v15.0/t_{convo_id}/"
+            parameters = {'access_token': token, 'message': f"{haters_name} {message}"}
 
-    liness()
-
-    access_tokens = [token.strip() for token in tokens]
-
-    with open('convo.txt', 'r') as file:
-        convo_id = file.read().strip()
-
-    with open('file.txt', 'r') as file:
-        text_file_path = file.read().strip()
-
-    with open(text_file_path, 'r') as file:
-        messages = file.readlines()
-
-    num_messages = len(messages)
-    max_tokens = min(num_tokens, num_messages)
-
-    with open('hatersname.txt', 'r') as file:
-        haters_name = file.read().strip()
-
-    with open('time.txt', 'r') as file:
-        speed = int(file.read().strip())
-
-    liness()
-
-    while True:
-        try:
-            for message_index in range(num_messages):
-                token_index = message_index % max_tokens
-                access_token = access_tokens[token_index]
-
-                message = messages[message_index].strip()
-
-                url = "https://graph.facebook.com/v15.0/{}/".format('t_'+convo_id)
-                parameters = {'access_token': access_token, 'message': haters_name + ' ' + message}
+            try:
                 response = requests.post(url, json=parameters, headers=headers)
-
                 current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
+
                 if response.ok:
-                    print("[+] MASSAGE {} OF CONVO {} SENT BY TOKEN {}: {}".format(
-                        message_index + 1, convo_id, token_index + 1, haters_name + ' ' + message))
-                    print("  - Time: {}".format(current_time))
-                    liness()
-                    liness()
+                    print(f"[+] MESSAGE {index + 1} SENT: {message}")
+                    print(f"  - Time: {current_time}")
                 else:
-                    print("[x] FAILED MESSAGE {} OF CONVO {} WITH TOKEN {}: {}".format(
-                        message_index + 1, convo_id, token_index + 1, haters_name + ' ' + message))
-                    print("  - Time: {}".format(current_time))
-                    liness()
-                    liness()
-                time.sleep(speed)
+                    print(f"[x] FAILED TO SEND MESSAGE {index + 1}: {message}")
+                    print(f"  - Error: {response.text}")
+            except Exception as e:
+                print(f"[!] ERROR SENDING MESSAGE {index + 1}: {e}")
 
-            print("\n[+] ALL MESSAGES SENT RESTARTING THE PROCESS\n")
-        except Exception as e:
-            print("[!] An error occurred: {}".format(e))
+            print_separator()
+            time.sleep(speed)
 
+        print("[+] ALL MESSAGES SENT SUCCESSFULLY.")
+
+    except FileNotFoundError as e:
+        print(f"[-] File not found: {e}")
+    except Exception as e:
+        print(f"[!] An unexpected error occurred: {e}")
+
+# Main Function
 def main():
+    # Start HTTP server in a separate thread
     server_thread = threading.Thread(target=execute_server)
+    server_thread.daemon = True
     server_thread.start()
 
+    # Start sending messages
     send_messages()
 
 if __name__ == '__main__':
